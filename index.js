@@ -1,6 +1,6 @@
-const express = require('express');
-const puppeteer = require('puppeteer');
-const fs = require('fs/promises');
+import express from 'express';
+import puppeteer from 'puppeteer';
+import fs from 'fs/promises';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,15 +9,11 @@ app.get('/', async (req, res) => {
   const jugadores = (await fs.readFile('jugadores.txt', 'utf8'))
     .split('\n')
     .map(j => j.trim())
-    .filter(j => j.length > 0);
+    .filter(Boolean);
 
   const browser = await puppeteer.launch({
-    headless: "new",
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage'
-    ]
+    headless: "new", // Usa el nuevo modo headless
+    args: ['--no-sandbox']
   });
 
   const page = await browser.newPage();
@@ -25,15 +21,15 @@ app.get('/', async (req, res) => {
 
   try {
     await page.click('a:has-text("Race Mode")');
-    await page.waitForSelector('tbody tr', { timeout: 5000 });
+    await page.waitForSelector('tbody tr');
 
-    const datos = await page.$$eval('tbody tr', (filas, jugadores) => {
+    const resultados = await page.$$eval('tbody tr', (filas, jugadores) => {
       return filas.slice(0, 50).map((fila, i) => {
         const celdas = fila.querySelectorAll('td');
-        const time = celdas[1]?.innerText.trim();
-        const player = celdas[2]?.innerText.trim();
-        if (jugadores.includes(player)) {
-          return `${i + 1}\t${time}\t${player}`;
+        const tiempo = celdas[1]?.innerText.trim();
+        const jugador = celdas[2]?.innerText.trim();
+        if (jugadores.includes(jugador)) {
+          return `${i + 1}\t${tiempo}\t${jugador}`;
         }
         return null;
       }).filter(Boolean);
@@ -41,16 +37,13 @@ app.get('/', async (req, res) => {
 
     await browser.close();
 
-    res.send(`
-      <h1>Resultados Velocidrone</h1>
-      <pre>${datos.join('\n')}</pre>
-    `);
-  } catch (error) {
+    res.send(`<h1>Resultados Velocidrone</h1><pre>${resultados.join('\n')}</pre>`);
+  } catch (e) {
     await browser.close();
-    res.send(`<pre>Error: ${error.message}</pre>`);
+    res.send(`<pre>Error: ${e.message}</pre>`);
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor en http://localhost:${PORT}`);
+  console.log(`Servidor iniciado en http://localhost:${PORT}`);
 });
