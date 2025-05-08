@@ -1,7 +1,6 @@
 Lacasito
 andreu
 JalasFPV
-MakaMFPV
 BENI04
 janovigo
 Andresgetafe
@@ -9,4 +8,3 @@ EduCa
 passionrc
 Kaos_FPV
 RAIJINFPV
-test2025

@@ -133,9 +133,22 @@ app.get('/', async (req, res) => {
           border-radius: 10px;
           flex: 1;
         }
+        .card h3 {
+          font-size: 22px;
+          font-weight: bold;
+          color: #fff;
+        }
         .resultado {
+          font-size: 17px;
+          font-weight: 500;
+          line-height: 1.6;
           font-family: monospace;
           white-space: pre;
+        }
+        .rankings .card h3 {
+          font-size: 20px;
+          font-weight: bold;
+          margin-bottom: 10px;
         }
         .formulario {
           background: rgba(255,255,255,0.95);
