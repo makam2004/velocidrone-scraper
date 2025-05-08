@@ -81,7 +81,7 @@ app.get('/', async (req, res) => {
   const semana = Math.ceil(((((new Date()) - new Date(new Date().getFullYear(), 0, 1)) / 86400000) + new Date().getDay() + 1) / 7);
   const urls = [
 	'https://www.velocidrone.com/leaderboard/33/1527/All',
-	'https://www.velocidrone.com/leaderboard/16/1795/All'
+'https://www.velocidrone.com/leaderboard/16/1795/All'
   ];
 
   const ranking = {};
@@ -127,6 +127,7 @@ app.get('/', async (req, res) => {
         .top-bar h1 {
           font-size: 40px;
           margin: 0;
+		  font-family: 'Castellar', serif;
         }
         .logo {
           height: 50px;

@@ -78,10 +78,10 @@ async function obtenerResultados(url, jugadores) {
 
 app.get('/', async (req, res) => {
   const jugadores = await leerJugadores();
-  const semana = Math.ceil(((((new Date()) - new Date(new Date().getFullYear(), 0, 1)) / 86400000) + new Date().getDay() + 1) / 7);
+  const semana = Math.ceil((((new Date()) - new Date(new Date().getFullYear(), 0, 1)) / 86400000 + new Date().getDay() + 1) / 7);
   const urls = [
-	'https://www.velocidrone.com/leaderboard/33/1527/All',
-'https://www.velocidrone.com/leaderboard/16/1795/All'
+    'https://www.velocidrone.com/leaderboard/33/1527/All',
+    'https://www.velocidrone.com/leaderboard/16/1795/All'
   ];
 
   const ranking = {};
@@ -120,17 +120,34 @@ app.get('/', async (req, res) => {
         .top-bar {
           display: flex;
           align-items: center;
-          justify-content: center;
-          gap: 20px;
+          justify-content: space-between;
           margin-bottom: 20px;
+        }
+        .top-bar-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .top-bar-center {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+        .top-bar-right {
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
         .top-bar h1 {
           font-size: 40px;
           margin: 0;
-		  font-family: 'Castellar', serif;
+          font-family: 'Castellar', serif;
         }
         .logo {
           height: 50px;
+        }
+        .telegram {
+          height: 30px;
         }
         .tracks, .rankings {
           display: flex;
@@ -155,38 +172,36 @@ app.get('/', async (req, res) => {
           font-family: monospace;
           white-space: pre;
         }
-        #modal, #modal-alta {
-          display: none;
-          position: fixed;
-          top: 60px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: #fff;
-          color: #000;
-          padding: 20px;
-          border-radius: 10px;
-          z-index: 1000;
-          max-width: 400px;
-        }
-        #modal-close, #modal-close-alta {
-          position: absolute;
-          top: 5px;
-          right: 10px;
+        .btn {
+          background: #0088cc;
+          color: white;
+          padding: 10px 15px;
+          border: none;
+          border-radius: 5px;
           cursor: pointer;
-          color: red;
-          font-size: 16px;
+          font-weight: bold;
+          text-decoration: none;
         }
-        #modal ul { padding-left: 20px; }
-        #modal li { margin-bottom: 10px; }
+        .btn:hover {
+          background: #0077bb;
+        }
       </style>
     </head>
     <body>
       <div class="top-bar">
-        <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
-        <h1>LIGA VELOCIDRONE SEMANA ${semana}</h1>
-        <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
-        <button onclick="document.getElementById('modal').style.display='block'" style="background-color:#007bff;color:white;border:none;padding:14px 24px;font-size:18px;border-radius:8px;cursor:pointer;">📜 Reglamento</button>
-        <button onclick="document.getElementById('modal-alta').style.display='block'" style="background-color:#28a745;color:white;border:none;padding:14px 24px;font-size:18px;border-radius:8px;cursor:pointer;">➕ Alta Piloto</button>
+        <div class="top-bar-left">
+          <a href="#" class="btn" onclick="mostrarReglamento()">Reglamento</a>
+        </div>
+        <div class="top-bar-center">
+          <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
+          <h1>LIGA VELOCIDRONE SEMANA ${semana}</h1>
+          <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
+        </div>
+        <div class="top-bar-right">
+          <a href="https://t.me/ligasemanalvelocidron" target="_blank">
+            <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png" alt="Telegram" class="telegram">
+          </a>
+        </div>
       </div>
 
       <div class="tracks">
@@ -198,43 +213,27 @@ app.get('/', async (req, res) => {
         <div class="card"><h3>Ranking Anual</h3><div class="resultado">${ranking_anual.join('\n')}</div></div>
       </div>
 
-      <div id="modal">
-        <div id="modal-close" onclick="document.getElementById('modal').style.display='none'">✖</div>
+      <div id="popup-reglamento" style="display:none; position:fixed; top:100px; left:50%; transform:translateX(-50%); background:white; color:black; padding:20px; border-radius:10px; z-index:999;">
         <h3>Reglamento</h3>
-        <ul>
-          ${reglamento.map(regla => `<li>${regla}</li>`).join('')}
-        </ul>
+        <ul>${reglamento.map(linea => `<li>${linea}</li>`).join('')}</ul>
+        <br><button onclick="document.getElementById('popup-reglamento').style.display='none'">Cerrar</button>
       </div>
 
-      <div id="modal-alta">
-        <div id="modal-close-alta" onclick="document.getElementById('modal-alta').style.display='none'">✖</div>
-        <h3>Alta Piloto</h3>
-        <form method="POST">
-          <input type="text" name="nuevo_piloto" placeholder="Nombre en Velocidrone" required style="width:100%;padding:8px;"><br><br>
-          <label><input type="checkbox" name="soy_humano" required> No soy un robot</label><br><br>
-          <input type="submit" value="Añadir" style="padding:8px 16px;background:#28a745;border:none;color:white;border-radius:5px;">
-        </form>
-      </div>
+      <script>
+        function mostrarReglamento() {
+          document.getElementById('popup-reglamento').style.display = 'block';
+        }
+      </script>
     </body>
     </html>
   `);
 });
 
-app.post('/', async (req, res) => {
-  const chunks = [];
-  req.on('data', chunk => chunks.push(chunk));
-  req.on('end', async () => {
-    const data = Buffer.concat(chunks).toString();
-    const nuevo_piloto = new URLSearchParams(data).get("nuevo_piloto");
-    const soy_humano = new URLSearchParams(data).get("soy_humano");
-    if (nuevo_piloto && soy_humano === 'on') {
-      const jugadores = await leerJugadores();
-      if (!jugadores.includes(nuevo_piloto)) {
-        await fs.appendFile('jugadores.txt', `\n${nuevo_piloto}`);
-      }
-    }
-    res.redirect('/');
-  });
+// ✅ Ruta oculta para mostrar jugadores.txt
+app.get('/ver-jugadores', async (req, res) => {
+  const jugadores = await leerJugadores();
+  res.setHeader('Content-Type', 'text/plain');
+  res.send(jugadores.join('\n'));
 });
 
 app.listen(PORT, () => {
