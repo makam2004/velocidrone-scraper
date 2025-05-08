@@ -69,7 +69,7 @@ async function obtenerResultados(url, jugadores) {
 
 app.get('/', async (req, res) => {
   const jugadores = await leerJugadores();
-  const semana = new Date().toLocaleDateString('es-ES', { week: 'numeric' });
+  const semana = Math.ceil((((new Date()) - new Date(new Date().getFullYear(), 0, 1)) / 86400000 + new Date().getDay() + 1) / 7);
   const urls = [
     'https://www.velocidrone.com/leaderboard/16/1777/All',
     'https://www.velocidrone.com/leaderboard/16/1780/All'
@@ -109,10 +109,19 @@ app.get('/', async (req, res) => {
           padding: 20px;
         }
         .top-bar {
-          text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 20px;
           margin-bottom: 20px;
         }
-        h1 { font-size: 40px; }
+        .top-bar h1 {
+          font-size: 40px;
+          margin: 0;
+        }
+        .logo {
+          height: 50px;
+        }
         .tracks, .rankings {
           display: flex;
           gap: 20px;
@@ -131,14 +140,18 @@ app.get('/', async (req, res) => {
         .formulario {
           background: rgba(255,255,255,0.95);
           color: #000;
-          padding: 20px;
+          padding: 12px;
           border-radius: 10px;
+          width: 180px;
+          font-size: 14px;
         }
       </style>
     </head>
     <body>
       <div class="top-bar">
+        <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
         <h1>LIGA VELOCIDRONE SEMANA ${semana}</h1>
+        <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
       </div>
       <div class="tracks">
         ${tracks.map(t => `<div class="card"><h3>${t.nombre}</h3><div class="resultado">${t.datos.join('\n')}</div></div>`).join('')}
@@ -146,14 +159,14 @@ app.get('/', async (req, res) => {
       <div class="rankings">
         <div class="card"><h3>Ranking Semanal</h3><div class="resultado">${ranking_semanal.join('\n')}</div></div>
         <div class="card"><h3>Ranking Anual</h3><div class="resultado">${ranking_anual.join('\n')}</div></div>
-      </div>
-      <div class="formulario">
-        <h3>Alta de piloto</h3>
-        <form method="POST">
-          <input type="text" name="nuevo_piloto" placeholder="Nombre del piloto" required><br><br>
-          <label><input type="checkbox" name="soy_humano" required> No soy un robot</label><br><br>
-          <input type="submit" value="Añadir">
-        </form>
+        <div class="formulario">
+          <h3>Alta piloto</h3>
+          <form method="POST">
+            <input type="text" name="nuevo_piloto" placeholder="Nombre del piloto" required><br><br>
+            <label><input type="checkbox" name="soy_humano" required> No soy un robot</label><br><br>
+            <input type="submit" value="Añadir">
+          </form>
+        </div>
       </div>
     </body>
     </html>
