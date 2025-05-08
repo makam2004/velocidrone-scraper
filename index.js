@@ -58,7 +58,7 @@ async function obtenerResultados(url, jugadores) {
     const escenario = await page.$eval('h2.text-center', el => el.innerText.trim());
 
     const resultados = await page.$$eval('tbody tr', (filas, jugadores) => {
-      return filas.slice(0, 100).map((fila, i) => {
+      return filas.slice(0, 50).map((fila, i) => {
         const celdas = fila.querySelectorAll('td');
         const tiempo = celdas[1]?.innerText.trim();
         const jugador = celdas[2]?.innerText.trim();
@@ -81,8 +81,8 @@ app.get('/', async (req, res) => {
   const jugadores = await leerJugadores();
   const semana = Math.ceil((((new Date()) - new Date(new Date().getFullYear(), 0, 1)) / 86400000 + new Date().getDay() + 1) / 7);
   const urls = [
-    'https://www.velocidrone.com/leaderboard/16/1795/All',
-    'https://www.velocidrone.com/leaderboard/33/1527/All'
+    'https://www.velocidrone.com/leaderboard/16/1777/All',
+    'https://www.velocidrone.com/leaderboard/16/1780/All'
   ];
 
   const ranking = {};
@@ -161,31 +161,50 @@ app.get('/', async (req, res) => {
           margin-bottom: 10px;
         }
         .formulario {
-          background: rgba(255,255,255,0.95);
-          color: #000;
+          background: rgba(0, 0, 0, 0.6);
+          color: #fff;
           padding: 12px;
           border-radius: 10px;
           width: 180px;
           font-size: 14px;
         }
-        button {
+        #modal {
+          display: none;
+          position: fixed;
+          top: 50px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #fff;
+          color: #000;
+          padding: 20px;
+          border-radius: 10px;
+          z-index: 1000;
+          max-width: 400px;
+        }
+        #modal ul { padding-left: 20px; }
+        #modal li { margin-bottom: 10px; }
+        #modal-close {
+          position: absolute;
+          top: 5px;
+          right: 10px;
           cursor: pointer;
+          color: red;
+          font-size: 16px;
         }
       </style>
     </head>
     <body>
       <div class="top-bar">
-        <button onclick="document.getElementById('modal').style.display='block'" style="background-color:#007bff;color:white;border:none;padding:10px 15px;border-radius:5px;cursor:pointer;">
-          📜 Reglamento
-        </button>
         <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
         <h1>LIGA VELOCIDRONE SEMANA ${semana}</h1>
         <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
+        <button onclick="document.getElementById('modal').style.display='block'" style="background-color:#007bff;color:white;border:none;padding:14px 24px;font-size:18px;border-radius:8px;cursor:pointer;">📜 Reglamento</button>
       </div>
 
       <div class="tracks">
         ${tracks.map(t => `<div class="card"><h3>${t.nombre}</h3><div class="resultado">${t.datos.join('\n')}</div></div>`).join('')}
       </div>
+
       <div class="rankings">
         <div class="card"><h3>Ranking Semanal</h3><div class="resultado">${ranking_semanal.join('\n')}</div></div>
         <div class="card"><h3>Ranking Anual</h3><div class="resultado">${ranking_anual.join('\n')}</div></div>
@@ -199,15 +218,12 @@ app.get('/', async (req, res) => {
         </div>
       </div>
 
-      <!-- Modal del Reglamento -->
-      <div id="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;">
-        <div style="background:white;color:black;padding:20px;border-radius:8px;width:400px;margin:100px auto;position:relative;">
-          <h2>Reglamento</h2>
-          <ul>
-            ${reglamento.map(x => `<li>${x}</li>`).join('')}
-          </ul>
-          <button onclick="document.getElementById('modal').style.display='none'" style="margin-top:10px;background:#dc3545;color:white;border:none;padding:8px 12px;border-radius:5px;">Cerrar</button>
-        </div>
+      <div id="modal">
+        <div id="modal-close" onclick="document.getElementById('modal').style.display='none'">✖</div>
+        <h3>Reglamento</h3>
+        <ul>
+          ${reglamento.map(regla => `<li>${regla}</li>`).join('')}
+        </ul>
       </div>
     </body>
     </html>
