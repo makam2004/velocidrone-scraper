@@ -15,13 +15,15 @@ app.get('/', async (req, res) => {
   try {
     browser = await puppeteer.launch({
       headless: 'new',
-      args: ['--no-sandbox']
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
     const page = await browser.newPage();
-    await page.goto('https://www.velocidrone.com/leaderboard/16/1777/All', { waitUntil: 'networkidle2' });
+    await page.goto('https://www.velocidrone.com/leaderboard/16/1777/All', {
+      waitUntil: 'domcontentloaded'
+    });
 
-    // Clic en la pestaña Race Mode de forma más estable
+    // Selecciona "Race Mode" de forma segura
     await page.evaluate(() => {
       const tabs = Array.from(document.querySelectorAll('a')).filter(el => el.textContent.includes('Race Mode'));
       if (tabs.length > 0) tabs[0].click();
