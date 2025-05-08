@@ -1,4 +1,3 @@
-
 import express from 'express';
 import puppeteer from 'puppeteer';
 import fs from 'fs/promises';
@@ -79,10 +78,10 @@ async function obtenerResultados(url, jugadores) {
 
 app.get('/', async (req, res) => {
   const jugadores = await leerJugadores();
-  const semana = Math.ceil((((new Date()) - new Date(new Date().getFullYear(), 0, 1)) / 86400000 + new Date().getDay() + 1) / 7);
+  const semana = Math.ceil(((((new Date()) - new Date(new Date().getFullYear(), 0, 1)) / 86400000) + new Date().getDay() + 1) / 7);
   const urls = [
-    'https://www.velocidrone.com/leaderboard/16/1777/All',
-    'https://www.velocidrone.com/leaderboard/16/1780/All'
+	'https://www.velocidrone.com/leaderboard/33/1527/All',
+	'https://www.velocidrone.com/leaderboard/16/1795/All'
   ];
 
   const ranking = {};
@@ -155,23 +154,10 @@ app.get('/', async (req, res) => {
           font-family: monospace;
           white-space: pre;
         }
-        .rankings .card h3 {
-          font-size: 20px;
-          font-weight: bold;
-          margin-bottom: 10px;
-        }
-        .formulario {
-          background: rgba(0, 0, 0, 0.6);
-          color: #fff;
-          padding: 12px;
-          border-radius: 10px;
-          width: 180px;
-          font-size: 14px;
-        }
-        #modal {
+        #modal, #modal-alta {
           display: none;
           position: fixed;
-          top: 50px;
+          top: 60px;
           left: 50%;
           transform: translateX(-50%);
           background: #fff;
@@ -181,9 +167,7 @@ app.get('/', async (req, res) => {
           z-index: 1000;
           max-width: 400px;
         }
-        #modal ul { padding-left: 20px; }
-        #modal li { margin-bottom: 10px; }
-        #modal-close {
+        #modal-close, #modal-close-alta {
           position: absolute;
           top: 5px;
           right: 10px;
@@ -191,6 +175,8 @@ app.get('/', async (req, res) => {
           color: red;
           font-size: 16px;
         }
+        #modal ul { padding-left: 20px; }
+        #modal li { margin-bottom: 10px; }
       </style>
     </head>
     <body>
@@ -199,6 +185,7 @@ app.get('/', async (req, res) => {
         <h1>LIGA VELOCIDRONE SEMANA ${semana}</h1>
         <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
         <button onclick="document.getElementById('modal').style.display='block'" style="background-color:#007bff;color:white;border:none;padding:14px 24px;font-size:18px;border-radius:8px;cursor:pointer;">📜 Reglamento</button>
+        <button onclick="document.getElementById('modal-alta').style.display='block'" style="background-color:#28a745;color:white;border:none;padding:14px 24px;font-size:18px;border-radius:8px;cursor:pointer;">➕ Alta Piloto</button>
       </div>
 
       <div class="tracks">
@@ -208,14 +195,6 @@ app.get('/', async (req, res) => {
       <div class="rankings">
         <div class="card"><h3>Ranking Semanal</h3><div class="resultado">${ranking_semanal.join('\n')}</div></div>
         <div class="card"><h3>Ranking Anual</h3><div class="resultado">${ranking_anual.join('\n')}</div></div>
-        <div class="formulario">
-          <h3>Alta piloto</h3>
-          <form method="POST">
-            <input type="text" name="nuevo_piloto" placeholder="Nombre en Velocidrone" required><br><br>
-            <label><input type="checkbox" name="soy_humano" required> No soy un robot</label><br><br>
-            <input type="submit" value="Añadir">
-          </form>
-        </div>
       </div>
 
       <div id="modal">
@@ -224,6 +203,16 @@ app.get('/', async (req, res) => {
         <ul>
           ${reglamento.map(regla => `<li>${regla}</li>`).join('')}
         </ul>
+      </div>
+
+      <div id="modal-alta">
+        <div id="modal-close-alta" onclick="document.getElementById('modal-alta').style.display='none'">✖</div>
+        <h3>Alta Piloto</h3>
+        <form method="POST">
+          <input type="text" name="nuevo_piloto" placeholder="Nombre en Velocidrone" required style="width:100%;padding:8px;"><br><br>
+          <label><input type="checkbox" name="soy_humano" required> No soy un robot</label><br><br>
+          <input type="submit" value="Añadir" style="padding:8px 16px;background:#28a745;border:none;color:white;border-radius:5px;">
+        </form>
       </div>
     </body>
     </html>
