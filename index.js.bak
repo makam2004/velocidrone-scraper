@@ -7,12 +7,10 @@ const PORT = process.env.PORT || 3000;
 
 app.get('/', async (req, res) => {
   const jugadores = (await fs.readFile('jugadores.txt', 'utf8'))
-    .split('\n')
-    .map(j => j.trim())
-    .filter(Boolean);
+    .split('\n').map(j => j.trim()).filter(Boolean);
 
   const browser = await puppeteer.launch({
-    headless: "new", // Usa el nuevo modo headless
+    headless: 'new',
     args: ['--no-sandbox']
   });
 
@@ -36,7 +34,6 @@ app.get('/', async (req, res) => {
     }, jugadores);
 
     await browser.close();
-
     res.send(`<h1>Resultados Velocidrone</h1><pre>${resultados.join('\n')}</pre>`);
   } catch (e) {
     await browser.close();
