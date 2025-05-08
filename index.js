@@ -1,3 +1,4 @@
+
 import express from 'express';
 import puppeteer from 'puppeteer';
 import fs from 'fs/promises';
@@ -80,7 +81,7 @@ app.get('/', async (req, res) => {
   const jugadores = await leerJugadores();
   const semana = Math.ceil((((new Date()) - new Date(new Date().getFullYear(), 0, 1)) / 86400000 + new Date().getDay() + 1) / 7);
   const urls = [
-    'https://www.velocidrone.com/leaderboard/16/1777/All',
+    'https://www.velocidrone.com/leaderboard/16/1795/All,
     'https://www.velocidrone.com/leaderboard/16/1780/All'
   ];
 
@@ -167,14 +168,21 @@ app.get('/', async (req, res) => {
           width: 180px;
           font-size: 14px;
         }
+        button {
+          cursor: pointer;
+        }
       </style>
     </head>
     <body>
       <div class="top-bar">
+        <button onclick="document.getElementById('modal').style.display='block'" style="background-color:#007bff;color:white;border:none;padding:10px 15px;border-radius:5px;cursor:pointer;">
+          📜 Reglamento
+        </button>
         <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
         <h1>LIGA VELOCIDRONE SEMANA ${semana}</h1>
         <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
       </div>
+
       <div class="tracks">
         ${tracks.map(t => `<div class="card"><h3>${t.nombre}</h3><div class="resultado">${t.datos.join('\n')}</div></div>`).join('')}
       </div>
@@ -184,10 +192,21 @@ app.get('/', async (req, res) => {
         <div class="formulario">
           <h3>Alta piloto</h3>
           <form method="POST">
-            <input type="text" name="nuevo_piloto" placeholder="Nombre del piloto" required><br><br>
+            <input type="text" name="nuevo_piloto" placeholder="Nombre en Velocidrone" required><br><br>
             <label><input type="checkbox" name="soy_humano" required> No soy un robot</label><br><br>
             <input type="submit" value="Añadir">
           </form>
+        </div>
+      </div>
+
+      <!-- Modal del Reglamento -->
+      <div id="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;">
+        <div style="background:white;color:black;padding:20px;border-radius:8px;width:400px;margin:100px auto;position:relative;">
+          <h2>Reglamento</h2>
+          <ul>
+            ${reglamento.map(x => `<li>${x}</li>`).join('')}
+          </ul>
+          <button onclick="document.getElementById('modal').style.display='none'" style="margin-top:10px;background:#dc3545;color:white;border:none;padding:8px 12px;border-radius:5px;">Cerrar</button>
         </div>
       </div>
     </body>
