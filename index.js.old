@@ -20,15 +20,6 @@ async function leerJugadores() {
   }
 }
 
-async function leerReglamento() {
-  try {
-    const data = await fs.readFile('reglamento.txt', 'utf8');
-    return data.split('\n').map(x => x.trim()).filter(Boolean);
-  } catch {
-    return ['No se pudo cargar el reglamento.'];
-  }
-}
-
 async function leerRankingAnual() {
   try {
     const data = await fs.readFile('rankinganual.txt', 'utf8');
@@ -101,7 +92,7 @@ app.get('/', async (req, res) => {
     .sort((a, b) => b[1] - a[1])
     .map(([jugador, puntos], i) => `${i + 1}. ${jugador} - ${puntos} pts`);
 
-  const [ranking_anual, reglamento] = await Promise.all([leerRankingAnual(), leerReglamento()]);
+  const ranking_anual = await leerRankingAnual();
 
   res.send(`
     <!DOCTYPE html>
