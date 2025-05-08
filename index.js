@@ -81,8 +81,8 @@ app.get('/', async (req, res) => {
   const jugadores = await leerJugadores();
   const semana = Math.ceil((((new Date()) - new Date(new Date().getFullYear(), 0, 1)) / 86400000 + new Date().getDay() + 1) / 7);
   const urls = [
-    'https://www.velocidrone.com/leaderboard/16/1777/All',
-    'https://www.velocidrone.com/leaderboard/16/1780/All'
+    'https://www.velocidrone.com/leaderboard/33/1527/All',
+    'https://www.velocidrone.com/leaderboard/16/1795/All'
   ];
 
   const ranking = {};
