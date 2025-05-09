@@ -33,7 +33,7 @@ async function leerReglamento() {
 
 async function leerResultados() {
   try {
-    const json = await fs.readFile('resultados.json', 'utf8');
+    const data = await fs.readFile('/tmp/resultados.json', 'utf8');
     return JSON.parse(json);
   } catch {
     return null;
