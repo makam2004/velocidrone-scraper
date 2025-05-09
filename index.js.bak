@@ -1,6 +1,10 @@
 import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
+import { exec } from 'child_process';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -114,6 +118,23 @@ app.get('/', async (req, res) => {
     </body>
     </html>
   `);
+});
+
+// ✅ Ruta protegida para actualizar resultados
+app.get('/actualizar-resultados', (req, res) => {
+  const token = req.query.token;
+  if (token !== process.env.UPDATE_SECRET) {
+    return res.status(403).send('Acceso denegado');
+  }
+
+  exec('node actualizar_resultados.js', (err, stdout, stderr) => {
+    if (err) {
+      console.error('❌ Error al ejecutar actualización:', stderr);
+      return res.status(500).send('Error al actualizar');
+    }
+    console.log('✅ Resultados actualizados:', stdout);
+    res.send('Actualización completada');
+  });
 });
 
 app.listen(PORT, () => {

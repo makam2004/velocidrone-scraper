@@ -82,7 +82,7 @@ async function main() {
     ranking_semanal
   };
 
-  await fs.writeFile('resultados.json', JSON.stringify(resultadoFinal, null, 2));
+  await fs.writeFile('/tmp/resultados.json', JSON.stringify(resultadoFinal, null, 2));
   console.log('✅ Archivo resultados.json actualizado');
 }
 

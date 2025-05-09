@@ -1,13 +1,13 @@
-import puppeteer from 'puppeteer';
 import fs from 'fs/promises';
+import puppeteer from 'puppeteer';
+
+const puntos_posicion = [10, 8, 6, 4, 5];
+const puntos_default = 1;
 
 const urls = [
   'https://www.velocidrone.com/leaderboard/33/1527/All',
   'https://www.velocidrone.com/leaderboard/16/1795/All'
 ];
-
-const puntos_posicion = [10, 8, 6, 4, 5];
-const puntos_default = 1;
 
 async function leerJugadores() {
   try {
@@ -50,7 +50,6 @@ async function obtenerResultados(url, jugadores) {
 
     await browser.close();
     return { escenario, track, resultados };
-
   } catch (e) {
     await browser.close();
     return { escenario: 'Error', track: 'Error', resultados: [] };
@@ -70,23 +69,21 @@ async function main() {
       ranking[r.jugador] = (ranking[r.jugador] || 0) + puntos;
       return `${i + 1}\t${r.tiempo}\t${r.jugador}`;
     });
-    tracks.push({ url, nombre: `${escenario} - ${track}`, datos });
+    tracks.push({ nombre: `${escenario} - ${track}`, datos });
   }
 
   const ranking_semanal = Object.entries(ranking)
     .sort((a, b) => b[1] - a[1])
     .map(([jugador, puntos], i) => `${i + 1}. ${jugador} - ${puntos} pts`);
 
-  const resultado_json = {
+  const resultadoFinal = {
     semana,
-    urls,
     tracks,
-    ranking_semanal,
-    fecha: new Date().toISOString()
+    ranking_semanal
   };
 
-  await fs.writeFile('resultados.json', JSON.stringify(resultado_json, null, 2), 'utf8');
-  console.log("✅ Archivo resultados.json actualizado");
+  await fs.writeFile('resultados.json', JSON.stringify(resultadoFinal, null, 2));
+  console.log('✅ Archivo resultados.json actualizado');
 }
 
 main();
