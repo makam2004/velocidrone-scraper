@@ -24,3 +24,5 @@ sara fpv
 DiegoMar
 CessFPV
 yzk
+Pingar
+Krypton_FPV

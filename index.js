@@ -1,19 +1,21 @@
 import express from 'express';
-import puppeteer from 'puppeteer';
 import fs from 'fs/promises';
+import path from 'path';
+import { exec } from 'child_process';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const __dirname = path.resolve();
 
 app.use('/static', express.static('static'));
 app.use(express.urlencoded({ extended: true }));
 
-const puntos_posicion = [10, 8, 6, 4, 5];
-const puntos_default = 1;
-
-async function leerJugadores() {
+async function leerRankingAnual() {
   try {
-    const data = await fs.readFile('jugadores.txt', 'utf8');
+    const data = await fs.readFile('rankinganual.txt', 'utf8');
     return data.split('\n').map(x => x.trim()).filter(Boolean);
   } catch {
     return [];
@@ -29,79 +31,21 @@ async function leerReglamento() {
   }
 }
 
-async function leerRankingAnual() {
+async function leerResultados() {
   try {
-    const data = await fs.readFile('rankinganual.txt', 'utf8');
-    return data.split('\n').map(x => x.trim()).filter(Boolean);
+    const json = await fs.readFile('resultados.json', 'utf8');
+    return JSON.parse(json);
   } catch {
-    return [];
-  }
-}
-
-async function obtenerResultados(url, jugadores) {
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-  const page = await browser.newPage();
-  await page.goto(url, { waitUntil: 'domcontentloaded' });
-
-  try {
-    await page.evaluate(() => {
-      const tabs = Array.from(document.querySelectorAll('a')).filter(el => el.textContent.includes('Race Mode'));
-      if (tabs.length > 0) tabs[0].click();
-    });
-    await page.waitForSelector('tbody tr', { timeout: 10000 });
-
-    const track = await page.$eval('div.container h3', el => el.innerText.trim());
-    const escenario = await page.$eval('h2.text-center', el => el.innerText.trim());
-
-    const resultados = await page.$$eval('tbody tr', (filas, jugadores) => {
-      return filas.slice(0, 50).map((fila, i) => {
-        const celdas = fila.querySelectorAll('td');
-        const tiempo = celdas[1]?.innerText.trim();
-        const jugador = celdas[2]?.innerText.trim();
-        if (jugadores.includes(jugador)) {
-          return { tiempo, jugador };
-        }
-        return null;
-      }).filter(Boolean);
-    }, jugadores);
-
-    await browser.close();
-    return { escenario, track, resultados };
-  } catch (e) {
-    await browser.close();
-    return { escenario: 'Error', track: 'Error', resultados: [] };
+    return null;
   }
 }
 
 app.get('/', async (req, res) => {
-  const jugadores = await leerJugadores();
-  const semana = Math.ceil((((new Date()) - new Date(new Date().getFullYear(), 0, 1)) / 86400000 + new Date().getDay() + 1) / 7);
-  const urls = [
-    'https://www.velocidrone.com/leaderboard/33/1527/All',
-    'https://www.velocidrone.com/leaderboard/16/1795/All'
-  ];
+  const resultados = await leerResultados();
+  if (!resultados) return res.send('<h2>Error: No hay resultados disponibles aún.</h2>');
 
-  const ranking = {};
-  const tracks = [];
-
-  for (const url of urls) {
-    const { escenario, track, resultados } = await obtenerResultados(url, jugadores);
-    const datos = resultados.map((r, i) => {
-      const puntos = i < puntos_posicion.length ? puntos_posicion[i] : puntos_default;
-      ranking[r.jugador] = (ranking[r.jugador] || 0) + puntos;
-      return `${i + 1}\t${r.tiempo}\t${r.jugador}`;
-    });
-    tracks.push({ nombre: `${escenario} - ${track}`, datos });
-  }
-
-  const ranking_semanal = Object.entries(ranking)
-    .sort((a, b) => b[1] - a[1])
-    .map(([jugador, puntos], i) => `${i + 1}. ${jugador} - ${puntos} pts`);
-
-  const [ranking_anual, reglamento] = await Promise.all([leerRankingAnual(), leerReglamento()]);
+  const { semana, tracks, ranking_semanal } = resultados;
+  const ranking_anual = await leerRankingAnual();
 
   res.send(`
     <!DOCTYPE html>
@@ -120,34 +64,16 @@ app.get('/', async (req, res) => {
         .top-bar {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          margin-bottom: 20px;
-        }
-        .top-bar-left {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .top-bar-center {
-          display: flex;
-          align-items: center;
+          justify-content: center;
           gap: 20px;
-        }
-        .top-bar-right {
-          display: flex;
-          align-items: center;
-          gap: 10px;
+          margin-bottom: 20px;
         }
         .top-bar h1 {
           font-size: 40px;
           margin: 0;
-          font-family: 'Castellar', serif;
         }
         .logo {
           height: 50px;
-        }
-        .telegram {
-          height: 30px;
         }
         .tracks, .rankings {
           display: flex;
@@ -172,36 +98,13 @@ app.get('/', async (req, res) => {
           font-family: monospace;
           white-space: pre;
         }
-        .btn {
-          background: #0088cc;
-          color: white;
-          padding: 10px 15px;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-          font-weight: bold;
-          text-decoration: none;
-        }
-        .btn:hover {
-          background: #0077bb;
-        }
       </style>
     </head>
     <body>
       <div class="top-bar">
-        <div class="top-bar-left">
-          <a href="#" class="btn" onclick="mostrarReglamento()">Reglamento</a>
-        </div>
-        <div class="top-bar-center">
-          <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
-          <h1>LIGA VELOCIDRONE SEMANA ${semana}</h1>
-          <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" alt="Logo" class="logo">
-        </div>
-        <div class="top-bar-right">
-          <a href="https://t.me/ligasemanalvelocidron" target="_blank">
-            <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png" alt="Telegram" class="telegram">
-          </a>
-        </div>
+        <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" class="logo">
+        <h1>LIGA VELOCIDRONE SEMANA ${semana}</h1>
+        <img src="https://www.velocidrone.com/assets/images/VelocidroneLogoWeb.png" class="logo">
       </div>
 
       <div class="tracks">
@@ -212,30 +115,28 @@ app.get('/', async (req, res) => {
         <div class="card"><h3>Ranking Semanal</h3><div class="resultado">${ranking_semanal.join('\n')}</div></div>
         <div class="card"><h3>Ranking Anual</h3><div class="resultado">${ranking_anual.join('\n')}</div></div>
       </div>
-
-      <div id="popup-reglamento" style="display:none; position:fixed; top:100px; left:50%; transform:translateX(-50%); background:white; color:black; padding:20px; border-radius:10px; z-index:999;">
-        <h3>Reglamento</h3>
-        <ul>${reglamento.map(linea => `<li>${linea}</li>`).join('')}</ul>
-        <br><button onclick="document.getElementById('popup-reglamento').style.display='none'">Cerrar</button>
-      </div>
-
-      <script>
-        function mostrarReglamento() {
-          document.getElementById('popup-reglamento').style.display = 'block';
-        }
-      </script>
     </body>
     </html>
   `);
 });
 
-// ✅ Ruta oculta para mostrar jugadores.txt
-app.get('/ver-jugadores', async (req, res) => {
-  const jugadores = await leerJugadores();
-  res.setHeader('Content-Type', 'text/plain');
-  res.send(jugadores.join('\n'));
+// ✅ Ruta protegida para actualizar resultados
+app.get('/actualizar-resultados', (req, res) => {
+  const token = req.query.token;
+  if (token !== process.env.UPDATE_SECRET) {
+    return res.status(403).send('Acceso denegado');
+  }
+
+  exec('node actualizar_resultados.js', (err, stdout, stderr) => {
+    if (err) {
+      console.error('❌ Error al ejecutar actualización:', stderr);
+      return res.status(500).send('Error al actualizar');
+    }
+    console.log('✅ Resultados actualizados:', stdout);
+    res.send('Actualización completada');
+  });
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
+  console.log(`Servidor web escuchando en http://localhost:${PORT}`);
 });
