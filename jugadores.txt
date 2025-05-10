@@ -26,4 +26,3 @@ CessFPV
 yzk
 Pingar
 Krypton_FPV
-test
